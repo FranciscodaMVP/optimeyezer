@@ -20,10 +20,7 @@ doTraining = False
 start_time=0;
 end_time=0;
 
-def timer ():
-    now = time.localtime(time.time())
-    return now[5]
-
+lista_eventos =[];
 
 def featureCenter(f):
     return (.5*(f.mExtents[0]+f.mExtents[1]),.5*(f.mExtents[2]+f.mExtents[3]) )
@@ -53,6 +50,7 @@ def containsPoint(outerFeature, p):
 
 
 def end_time_function(a):
+    global end_time
     print 'a = ', a
     if a != 0:
         end_time=default_timer()-start_time
@@ -62,6 +60,7 @@ def end_time_function(a):
 # Returns the first eyes that are inside the face but not inside each other.
 # Eyes are returned as the tuple (leftEye, rightEye)
 def getLeftAndRightEyes(faces, eyes):
+    global start_time
     #loop through detected faces. We'll do our processing on the first valid one.
     if len(eyes)==0:
         return ()
