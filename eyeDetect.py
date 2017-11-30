@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import ClassyVirtualReferencePoint as ClassyVirtualReferencePoint
 import ransac
+from timeit import default_timer
 
 # set doTraining = False to display debug graphics:
 # You should do this first. There should be a green line from your
@@ -16,10 +17,12 @@ import ransac
 # or it won't work.
 doTraining = False
 
+start_time=0;
+end_time=0;
 
-
-
-
+def timer ():
+    now = time.localtime(time.time())
+    return now[5]
 
 
 def featureCenter(f):
@@ -48,6 +51,13 @@ def containsPoint(outerFeature, p):
     #eyes are arrays of the form [minX, minY, maxX, maxY]
     return p[0] > outerFeature[0] and p[0] < outerFeature[2] and p[1] > outerFeature[1] and p[1] < outerFeature[3]
 
+
+def end_time_function(a):
+    print 'a = ', a
+    if a != 0:
+        end_time=default_timer()-start_time
+        print 'time', end_time
+
 # Takes an ndarray of face rects, and an ndarray of eye rects.
 # Returns the first eyes that are inside the face but not inside each other.
 # Eyes are returned as the tuple (leftEye, rightEye)
@@ -63,20 +73,27 @@ def getLeftAndRightEyes(faces, eyes):
                 #eyes are arrays of the form [minX, minY, maxX, maxY]
                 if (leftEye[0]+leftEye[2]) > (rightEye[0]+rightEye[2]): #leftCenter is > rightCenter
                     rightEye, leftEye = leftEye, rightEye #swap
+                    start_time =default_timer()
+                    print 'start = ', start_time
                 if contains(leftEye,rightEye) or contains(rightEye, leftEye):#they overlap. One eye containing another is due to a double detection; ignore it
                     debugPrint('rejecting double eye')
+                    end_time_function('start_time')
                     continue
                 if leftEye[3] < rightEye[1] or rightEye[3] < leftEye[1]:#top of one is below (>) bottom of the other. One is likely a mouth or something, not an eye.
                     debugPrint('rejecting non-level eyes')
+                    end_time_function('start_time')                    
                     continue
 ##                if leftEye.minY()>face.coordinates()[1] or rightEye.minY()>face.coordinates()[1]: #top of eyes in top 1/2 of face
 ##                    continue;
                 if not (contains(face,leftEye) and contains(face,rightEye)):#face contains the eyes. This is our standard of humanity, so capture the face.
                     debugPrint("face doesn't contain both eyes")
+                    end_time_function('start_time')
                     continue
                 return (leftEye, rightEye)
 
     return ()
+
+
 
 verbose=True
 
