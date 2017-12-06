@@ -39,22 +39,26 @@ def valid_frame_time():
     last_time = default_timer()
 
 def advance_time():
-    global start_time, last_time
-    now = default_timer()
-    if (now - last_time) > 2:
+    global last_time
+    if (default_timer() - last_time) > 2:
         save_time()
 
 def save_time():
-    global events, eye_contact_times, start_time, last_time
+    global events, start_time, last_time
     now = default_timer()
-    events.append({'start': start_time - video_start, 'end': last_time - video_start})
-    eye_contact_times.append(last_time - start_time)
+    events.append({
+        'start': start_time - video_start,
+        'end': last_time - video_start,
+        'time': last_time - start_time
+    })
     start_time = now
     last_time = now
 
 def print_captured_times():
-    global events, eye_contact_times
+    global events
     global video_start, last_time
+
+    eye_contact_times = [e['time'] for e in events]
 
     total_time = last_time - video_start
     eye_contact_times_sum = sum(eye_contact_times)
@@ -65,14 +69,14 @@ def print_captured_times():
 
     print '\n\n\n'
     for i,event in enumerate(events):
-        print 'Contacto visual #', i
-        print '\tInicio:', event['start']
-        print '\tFinal:', event['end']
-        print '\tDuracion:', eye_contact_times[i]
+        print 'Contacto visual #', i + 1
+        print '\tInicio:', round(event['start'], 2)
+        print '\tFinal:', round(event['end'], 2)
+        print '\tDuracion:', round(event['time'], 2)
     print
-    print 'Tiempo total:', total_time, 'segundos'
-    print 'Tiempo total de contacto visual:', eye_contact_times_sum, 'segundos'
-    print 'Maximo tiempo de contacto visual consecutivo:', eye_contact_time_max, 'segundos'
+    print 'Tiempo total:', round(total_time, 2), 'segundos'
+    print 'Tiempo total de contacto visual:', round(eye_contact_times_sum, 2), 'segundos'
+    print 'Maximo tiempo de contacto visual consecutivo:', round(eye_contact_time_max, 2), 'segundos'
 
 ####################################
 
@@ -700,8 +704,8 @@ def fitTransformation(OffsetsAndPixels):
 WINDOW_NAME = "preview"
 def main():
     cv2.namedWindow(WINDOW_NAME) # open a window to show debugging images
-    #vc = cv2.VideoCapture(0) # Initialize the default camera
-    vc = cv2.VideoCapture('/media/js/Windows/Users/Juan Samuel/Desktop/nao videos/test2.avi')
+    vc = cv2.VideoCapture(0) # Initialize the default camera
+    #vc = cv2.VideoCapture('/media/js/Windows/Users/Juan Samuel/Desktop/nao videos/test1.avi')
     try:
         if vc.isOpened(): # try to get the first frame
             (readSuccessful, frame) = vc.read()
