@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import ClassyVirtualReferencePoint as ClassyVirtualReferencePoint
 import ransac
-import pprint
 from timeit import default_timer
 
 # set doTraining = False to display debug graphics:
@@ -23,10 +22,11 @@ doTraining = False
 ####################################
 
 events = []
+eye_contact_times = []
+
 video_start = 0
 start_time = 0
 last_time = 0
-pp = pprint.PrettyPrinter(indent=4)
 
 def start_time():
     global video_start, start_time, last_time
@@ -42,9 +42,32 @@ def advance_time():
     global events, start_time, last_time
     now = default_timer()
     if (now - last_time) > 2:
-        events.append({'now': now, 'start': start_time, 'end': last_time})
+        events.append({'start': start_time - video_start, 'end': last_time - video_start})
+        eye_contact_times.append(last_time - start_time)
         start_time = now
         last_time = now
+
+def print_captured_times():
+    global events, eye_contact_times
+    global video_start, last_time
+
+    total_time = last_time - video_start
+    eye_contact_times_sum = sum(eye_contact_times)
+    if eye_contact_times:
+        eye_contact_time_max = max(eye_contact_times)
+    else:
+        eye_contact_time_max = 0
+
+    print '\n\n\n'
+    for i,event in enumerate(events):
+        print 'Contacto visual #', i
+        print '\tInicio:', event['start']
+        print '\tFinal:', event['end']
+        print '\tDuracion:', eye_contact_times[i]
+    print
+    print 'Tiempo total:', total_time, 'segundos'
+    print 'Tiempo total de contacto visual:', eye_contact_times_sum, 'segundos'
+    print 'Maximo tiempo de contacto visual consecutivo:', eye_contact_time_max, 'segundos'
 
 ####################################
 
@@ -671,7 +694,6 @@ def fitTransformation(OffsetsAndPixels):
 
 WINDOW_NAME = "preview"
 def main():
-    global pp
     cv2.namedWindow(WINDOW_NAME) # open a window to show debugging images
     vc = cv2.VideoCapture(0) # Initialize the default camera
     try:
@@ -687,7 +709,7 @@ def main():
             key = cv2.waitKey(10)
             if key == 27: # exit on ESC
                 cv2.imwrite( "lastOutput.png", frame) #save the last-displayed image to file, for our report
-                pp.pprint(events)
+                print_captured_times()
                 break
             # Get Image from camera
             readSuccessful, frame = vc.read()
