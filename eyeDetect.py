@@ -39,13 +39,18 @@ def valid_frame_time():
     last_time = default_timer()
 
 def advance_time():
-    global events, start_time, last_time
+    global start_time, last_time
     now = default_timer()
     if (now - last_time) > 2:
-        events.append({'start': start_time - video_start, 'end': last_time - video_start})
-        eye_contact_times.append(last_time - start_time)
-        start_time = now
-        last_time = now
+        save_time()
+
+def save_time():
+    global events, eye_contact_times, start_time, last_time
+    now = default_timer()
+    events.append({'start': start_time - video_start, 'end': last_time - video_start})
+    eye_contact_times.append(last_time - start_time)
+    start_time = now
+    last_time = now
 
 def print_captured_times():
     global events, eye_contact_times
@@ -695,7 +700,8 @@ def fitTransformation(OffsetsAndPixels):
 WINDOW_NAME = "preview"
 def main():
     cv2.namedWindow(WINDOW_NAME) # open a window to show debugging images
-    vc = cv2.VideoCapture(0) # Initialize the default camera
+    #vc = cv2.VideoCapture(0) # Initialize the default camera
+    vc = cv2.VideoCapture('/media/js/Windows/Users/Juan Samuel/Desktop/nao videos/test2.avi')
     try:
         if vc.isOpened(): # try to get the first frame
             (readSuccessful, frame) = vc.read()
@@ -709,6 +715,7 @@ def main():
             key = cv2.waitKey(10)
             if key == 27: # exit on ESC
                 cv2.imwrite( "lastOutput.png", frame) #save the last-displayed image to file, for our report
+                save_time()
                 print_captured_times()
                 break
             # Get Image from camera
