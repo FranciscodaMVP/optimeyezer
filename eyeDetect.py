@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import ClassyVirtualReferencePoint as ClassyVirtualReferencePoint
 import ransac
+import pprint
 from timeit import default_timer
 
 # set doTraining = False to display debug graphics:
@@ -17,10 +18,35 @@ from timeit import default_timer
 # or it won't work.
 doTraining = False
 
-start_time=0;
-end_time=0;
+####################################
+# TIMER
+####################################
 
-lista_eventos =[];
+events = []
+video_start = 0
+start_time = 0
+last_time = 0
+pp = pprint.PrettyPrinter(indent=4)
+
+def start_time():
+    global video_start, start_time, last_time
+    start_time = default_timer()
+    video_start = start_time
+    last_time = start_time
+
+def valid_frame_time():
+    global last_time
+    last_time = default_timer()
+
+def advance_time():
+    global events, start_time, last_time
+    now = default_timer()
+    if (now - last_time) > 2:
+        events.append({'now': now, 'start': start_time, 'end': last_time})
+        start_time = now
+        last_time = now
+
+####################################
 
 def featureCenter(f):
     return (.5*(f.mExtents[0]+f.mExtents[1]),.5*(f.mExtents[2]+f.mExtents[3]) )
@@ -49,18 +75,10 @@ def containsPoint(outerFeature, p):
     return p[0] > outerFeature[0] and p[0] < outerFeature[2] and p[1] > outerFeature[1] and p[1] < outerFeature[3]
 
 
-def end_time_function(a):
-    global end_time
-    print 'a = ', a
-    if a != 0:
-        end_time=default_timer()-start_time
-        print 'time', end_time
-
 # Takes an ndarray of face rects, and an ndarray of eye rects.
 # Returns the first eyes that are inside the face but not inside each other.
 # Eyes are returned as the tuple (leftEye, rightEye)
 def getLeftAndRightEyes(faces, eyes):
-    global start_time
     #loop through detected faces. We'll do our processing on the first valid one.
     if len(eyes)==0:
         return ()
@@ -72,22 +90,18 @@ def getLeftAndRightEyes(faces, eyes):
                 #eyes are arrays of the form [minX, minY, maxX, maxY]
                 if (leftEye[0]+leftEye[2]) > (rightEye[0]+rightEye[2]): #leftCenter is > rightCenter
                     rightEye, leftEye = leftEye, rightEye #swap
-                    start_time =default_timer()
-                    print 'start = ', start_time
                 if contains(leftEye,rightEye) or contains(rightEye, leftEye):#they overlap. One eye containing another is due to a double detection; ignore it
                     debugPrint('rejecting double eye')
-                    end_time_function('start_time')
                     continue
                 if leftEye[3] < rightEye[1] or rightEye[3] < leftEye[1]:#top of one is below (>) bottom of the other. One is likely a mouth or something, not an eye.
                     debugPrint('rejecting non-level eyes')
-                    end_time_function('start_time')                    
                     continue
 ##                if leftEye.minY()>face.coordinates()[1] or rightEye.minY()>face.coordinates()[1]: #top of eyes in top 1/2 of face
 ##                    continue;
                 if not (contains(face,leftEye) and contains(face,rightEye)):#face contains the eyes. This is our standard of humanity, so capture the face.
                     debugPrint("face doesn't contain both eyes")
-                    end_time_function('start_time')
                     continue
+                valid_frame_time()
                 return (leftEye, rightEye)
 
     return ()
@@ -657,11 +671,13 @@ def fitTransformation(OffsetsAndPixels):
 
 WINDOW_NAME = "preview"
 def main():
+    global pp
     cv2.namedWindow(WINDOW_NAME) # open a window to show debugging images
     vc = cv2.VideoCapture(0) # Initialize the default camera
     try:
         if vc.isOpened(): # try to get the first frame
             (readSuccessful, frame) = vc.read()
+            start_time()
         else:
             raise(Exception("failed to open camera."))
             readSuccessful = False
@@ -671,9 +687,11 @@ def main():
             key = cv2.waitKey(10)
             if key == 27: # exit on ESC
                 cv2.imwrite( "lastOutput.png", frame) #save the last-displayed image to file, for our report
+                pp.pprint(events)
                 break
             # Get Image from camera
             readSuccessful, frame = vc.read()
+            advance_time()
     finally:
         vc.release() #close the camera
         cv2.destroyWindow(WINDOW_NAME) #close the window
