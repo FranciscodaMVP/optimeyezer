@@ -3,6 +3,7 @@ import numpy as np
 import ClassyVirtualReferencePoint as ClassyVirtualReferencePoint
 import ransac
 from timeit import default_timer
+import json
 
 # set doTraining = False to display debug graphics:
 # You should do this first. There should be a green line from your
@@ -19,6 +20,7 @@ doTraining = False
 
 start_time=0;
 end_time=0;
+log = '';
 
 lista_eventos =[];
 
@@ -51,10 +53,12 @@ def containsPoint(outerFeature, p):
 
 def end_time_function(a):
     global end_time
+    global log
     print 'a = ', a
     if a != 0:
         end_time=default_timer()-start_time
         print 'time', end_time
+        log = log + ('time '+ str(end_time) +"\n")
 
 # Takes an ndarray of face rects, and an ndarray of eye rects.
 # Returns the first eyes that are inside the face but not inside each other.
@@ -669,7 +673,7 @@ def main():
         while readSuccessful:
             pupilOffsetXYList = getOffset(frame, allowDebugDisplay=True)
             key = cv2.waitKey(10)
-            if key == 27: # exit on ESC
+            if key == ord('s'): # exit on ESC
                 cv2.imwrite( "lastOutput.png", frame) #save the last-displayed image to file, for our report
                 break
             # Get Image from camera
@@ -730,11 +734,15 @@ def mainForTraining():
         vc.release() #close the camera
     
 
-
-
+            
 
 if __name__ == '__main__':
     if doTraining:
         mainForTraining()
     else:
+        log = 'starts \n' + log
         main()
+        # print('log ' + log)
+        with open ("log.txt","w") as outfile:
+            json.dump(log, outfile)
+
