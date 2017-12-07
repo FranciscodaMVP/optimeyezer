@@ -3,6 +3,7 @@ import numpy as np
 import ClassyVirtualReferencePoint as ClassyVirtualReferencePoint
 import ransac
 from timeit import default_timer
+import time
 
 # set doTraining = False to display debug graphics:
 # You should do this first. There should be a green line from your
@@ -27,6 +28,7 @@ eye_contact_times = []
 video_start = 0
 start_time = 0
 last_time = 0
+log = ''
 
 def start_time():
     global video_start, start_time, last_time
@@ -57,6 +59,7 @@ def save_time():
 def print_captured_times():
     global events
     global video_start, last_time
+    global log
 
     eye_contact_times = [e['time'] for e in events]
 
@@ -68,15 +71,38 @@ def print_captured_times():
         eye_contact_time_max = 0
 
     print '\n\n\n'
+    log += '-----------------------------------------------------------------------\n'
+    log += 'Record - ' + time.strftime("%c") + '\n'
     for i,event in enumerate(events):
         print 'Contacto visual #', i + 1
+        log += '\n' + 'Contacto visual #' + str(i + 1)
+        
         print '\tInicio:', round(event['start'], 2)
+        log += '\tInicio:' + str(round(event['start'], 2))
+        
         print '\tFinal:', round(event['end'], 2)
+        log += '\tFinal:' + str(round(event['end'], 2))
+        
         print '\tDuracion:', round(event['time'], 2)
+        log += '\tDuracion:' + str(round(event['time'], 2)) + ' segundos'
+    
     print
     print 'Tiempo total:', round(total_time, 2), 'segundos'
+    log += '\n\nTiempo total: ' + str(round(total_time, 2)) + 'segundos'
+    
     print 'Tiempo total de contacto visual:', round(eye_contact_times_sum, 2), 'segundos'
+    log += '\nTiempo total de contacto visual: ' + str(round(eye_contact_times_sum, 2)) + 'segundos'
+    
     print 'Maximo tiempo de contacto visual consecutivo:', round(eye_contact_time_max, 2), 'segundos'
+    log += '\nMaximo tiempo de contacto visual consecutivo: ' + str(round(eye_contact_time_max, 2)) + 'segundos'
+
+    log += '\n-----------------------------------------------------------------------'
+
+    #print '----------log ------------'
+    #print log
+
+    with open('log.txt','a') as f:
+        f.write(log)
 
 ####################################
 
@@ -704,7 +730,8 @@ def fitTransformation(OffsetsAndPixels):
 WINDOW_NAME = "preview"
 def main():
     cv2.namedWindow(WINDOW_NAME) # open a window to show debugging images
-    vc = cv2.VideoCapture(0) # Initialize the default camera
+    # vc = cv2.VideoCapture(0) # Initialize the default camera
+    vc = cv2.VideoCapture(1) # Initialize the default camera
     #vc = cv2.VideoCapture('/media/js/Windows/Users/Juan Samuel/Desktop/nao videos/test1.avi')
     try:
         if vc.isOpened(): # try to get the first frame
