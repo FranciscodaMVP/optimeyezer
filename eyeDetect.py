@@ -22,29 +22,39 @@ doTraining = False
 # TIMER
 ####################################
 
+# List of events
+# An event starts when eye contact is detected and ends when
+# eye contact is lost
+# It saves start, end, and time
 events = []
-eye_contact_times = []
 
 video_start = 0
 start_time = 0
 last_time = 0
 log = ''
 
+# Starts the timer
+# Initializes other variables
 def start_time():
     global video_start, start_time, last_time
     start_time = default_timer()
     video_start = start_time
     last_time = start_time
 
+# Advances the timer
+# Should be called every frame where eye contact is defined
 def valid_frame_time():
     global last_time
     last_time = default_timer()
 
+# Checks if eye contact has been lost
+# Should be called every frame
 def advance_time():
     global last_time
     if (default_timer() - last_time) > 2:
         save_time()
 
+# Saves the time in seconds for the eye contact
 def save_time():
     global events, start_time, last_time
     now = default_timer()
@@ -56,6 +66,8 @@ def save_time():
     start_time = now
     last_time = now
 
+# Prints the captures times
+# Should be called at the end of the program
 def print_captured_times():
     global events
     global video_start, last_time
